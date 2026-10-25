@@ -1,0 +1,169 @@
+project:
+  name: houses_regressor
+  random_state: 42
+  version: v_ensemble
+
+experiment:
+  # train / tuning / ensemble
+  mode: train
+
+data:
+  train_path: data/train.csv
+  test_path: data/test.csv
+  target: SalePrice
+  id_column: Id
+  log_target: true        
+
+validation:
+  method: kfold           
+  cv_folds: 5
+  shuffle: true
+
+preprocessing:
+  missing_values: median
+  encoding: onehot
+  scaling: true
+  drop_columns: Id        
+
+features:
+  enabled: true
+  total_sf: true
+  total_bath: true
+  total_porch: true
+  age: true
+  has_pool: true
+  has_2nd_floor: true
+  has_garage: true
+  has_bsmt: true
+  has_fireplace: true
+
+models:
+  score: rmse            
+
+  ridge:                  
+    enabled: true
+    alpha: 1.0
+    max_iter: 1000
+    preprocessing: standart
+
+  knn:                    
+    enabled: true
+    n_neighbors: 5
+    weights: distance
+    metric: minkowski
+    preprocessing: standart
+
+  decision_tree:          
+    enabled: true
+    max_depth: 5
+    preprocessing: tree
+
+  random_forest:          
+    enabled: true
+    n_estimators: 300
+    max_depth: 8
+    min_samples_split: 5
+    random_state: 42
+    preprocessing: tree
+
+  catboost:
+    enabled: true
+    iterations: 1000
+    learning_rate: 0.05
+    l2_leaf_reg: 3.0
+    depth: 6
+    loss_function: RMSE   
+    eval_metric: RMSE     
+    drop_columns:
+      - Id
+    # categorical_features:
+    #   - MSZoning
+    #   - Neighborhood
+    #   - BldgType
+    #   - HouseStyle
+    #   - CentralAir
+
+  xgboost:
+    enabled: true
+    n_estimators: 1000
+    max_depth: 4
+    learning_rate: 0.03
+    subsample: 0.8
+    colsample_bytree: 0.7
+    min_child_weight: 1
+    eval_metric: rmse    
+    preprocessing: tree
+  
+  mlp:
+    enabled: true
+    hidden_layer_sizes: [64, 32]
+    activation: relu
+    solver: adam
+    learning_rate_init: 0.005
+    batch_size: 32
+    max_iter: 400
+    alpha: 0.001
+    early_stopping: true
+    preprocessing: standart
+
+ensemble:
+  enabled: true
+  method: weighted_average
+  stacking:
+    enabled: true
+    final_model:
+      type: ridge         
+  weights:
+   
+    ridge: 0.15
+    catboost: 0.50
+    xgboost: 0.35
+
+training:
+  save_model: true
+  model_path: models/best_model.pkl
+
+tuning:
+  enabled: false
+  n_trials: 40
+  models:
+    catboost:
+      enabled: false
+      iterations:
+        min: 300
+        max: 1500
+      depth:
+        min: 4
+        max: 10
+      learning_rate:
+        min: 0.01
+        max: 0.3
+        log: true
+      l2_leaf_reg:
+        min: 1
+        max: 10
+    xgboost:
+      enabled: true
+      n_estimators:
+        min: 100
+        max: 1500
+      max_depth:
+        min: 3
+        max: 10
+      learning_rate:
+        min: 0.01
+        max: 0.3
+        log: true
+      subsample:
+        min: 0.5
+        max: 1.0
+      colsample_bytree:
+        min: 0.5
+        max: 1.0
+      min_child_weight:
+        min: 1
+        max: 10
+
+output:
+  experiments_path: results/scores.csv
+  tuning_path: results/tuning_results.csv
