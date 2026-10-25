@@ -36,8 +36,3 @@ catboost_info/
 *.tmp
 *.cache
 
-# Experiment results
-results/
-
-# Datasets
-data/
